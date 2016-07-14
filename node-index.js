@@ -1,7 +1,7 @@
 var request = require('request');
 
-var engine = "google";
-//var engine = 'duck';
+var engine = getItems(['google', 'duck'], 1, 1)[0];
+console.log('ENGINE:', engine);
 
 //var appKey = 'AIzaSyAXXTuVp2KeF3dnIWNkV74o8UGdYHWokhM';
 //var appKey = 'AIzaSyD1S2tYVgpUredMMQyhjc_PraTXu6c3JVk';
@@ -11,14 +11,15 @@ var engine = "google";
 // var appKey = 'AIzaSyBl0NeEv8Usv9HhKwPQGpv3LPYDlWEvwY4';
 var appKey = 'AIzaSyAMoMXx2F0KM_3aAPR7iQt1omD14e8SPQc';
 
-var retry = 3;
-var minWords = 5;
-var maxWords = 10;
+var retry = 1;
+var minWords = 3;
+var maxWords = 13;
 var minPermutations = 10;
 var maxPermutations = 15;
+var forceSpeed = 130;
 
 var dictionnary = [
-  "what s up",
+  "what's up",
   "well",
   "ugly",
   "horrible",
@@ -29,6 +30,7 @@ var dictionnary = [
   "bum",
   "scabby",
   "smelly",
+  "worthless",
   "beach",
   "slut",
   "royal",
@@ -36,8 +38,6 @@ var dictionnary = [
   "big",
   "big",
   "big",
-  "big",
-  "dumb",
   "dumb",
   "dumb",
   "dumb",
@@ -51,8 +51,6 @@ var dictionnary = [
   "cock",
   "this is",
   "I",
-  "you",
-  "you",
   "you",
   "you",
   "he",
@@ -86,7 +84,7 @@ var dictionnary = [
   "laila",
 ];
 generate(function (best) {
-  console.log('best:', best, getScore(best.result), getCorrection(best.result), 'DONE!');
+  console.log('best:', best.phrase, best, getScore(best.result), getCorrection(best.result), 'DONE!', best.phrase);
   // document.body.innerHTML = getCorrection(best.result) || best.phrase;
   //window.location = `https://translate.google.com/translate_tts?ie=UTF-8&q=${best.phrase}&tl=en&total=1&idx=0&tk=589126.967705&client=t&prev=input&ttsspeed=0.24`;
 
@@ -94,6 +92,7 @@ generate(function (best) {
 var streamArray = require("stream-array");
 var makeProp = require("make-prop-stream");
 var speechStream = require("speech-stream");
+var randomvoice = require("randomvoice")();
 var fs = require("fs");
 
 var Speaker = require('speaker');
@@ -106,10 +105,11 @@ reader.on('format', function (format) {
   // the WAVE header is stripped from the output of the reader
   reader.pipe(new Speaker(format));
 });
-
-var s = streamArray([best.phrase])
+randomvoice.speed = forceSpeed || randomvoice.speed;
+console.log('random voice options: ', randomvoice, forceSpeed);
+streamArray([best.phrase])
 .pipe(makeProp("message"))
-.pipe(speechStream())
+.pipe(speechStream(randomvoice))
 .pipe(reader)
 .pipe(fs.createWriteStream("out.wav"))
 
@@ -151,48 +151,26 @@ function getCorrection(result) {
   }
 }
 
+function getItems(dictionnary, min, max) {
+  var num = Math.ceil(min + Math.random() * (max - min));
+  var words = [];
+  var clone = JSON.parse(JSON.stringify(dictionnary));
+  for(i=0; i<num; i++) {
+    var idx = Math.floor(Math.random() * clone.length);
+    words = words.concat(clone.splice(idx, 1));
+  }
+  return words;
+}
+
 function generate(cbk) {
 
-  function getItems(dictionnary, min, max) {
-    var num = Math.ceil(min + Math.random() * (max - min));
-    var words = [];
-    console.log('getItems', dictionnary.length);
-    var clone = JSON.parse(JSON.stringify(dictionnary));
-    for(i=0; i<num; i++) {
-      var idx = Math.floor(Math.random() * clone.length);
-      words = words.concat(clone.splice(idx, 1));
-    }
-    return words;
+  var permutations = [];
+  while (permutations.length < maxPermutations) {
+    permutations.push(getItems(dictionnary, minWords, maxWords));
   }
-  var words = getItems(dictionnary, minWords, maxWords);
-  console.log(words);
-
-  //////////////////////////////////////
-
-  var permArr = [],
-    usedChars = [];
-
-  function permute(input) {
-    var i, ch;
-    for (i = 0; i < input.length; i++) {
-      ch = input.splice(i, 1)[0];
-      usedChars.push(ch);
-      if (input.length == 0) {
-        permArr.push(usedChars.slice());
-      }
-      permute(input);
-      input.splice(i, 0, ch);
-      usedChars.pop();
-    }
-    return permArr
-  };
-
-  var permutations = getItems(permute(words), minPermutations, maxPermutations);
-  console.log(permutations);
-  permutations = permutations.map(function(permutation) {
-    return getItems(permutation, minWords, maxWords);
-  });
-  console.log(permutations);
+  console.log(permutations.length, 'permutations');
+  permutations = getItems(permutations, minPermutations, maxPermutations);
+  console.log(permutations.length, 'permutations');
 
   ////////////////////////////////////////
   function lookupAll(phrases, done, searchResults) {
