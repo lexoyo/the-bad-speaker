@@ -1,0 +1,20 @@
+{
+  "name": "tts",
+  "version": "1.0.0",
+  "description": "a bot who speaks non sense",
+  "main": "node-index.js",
+  "scripts": {
+    "postinstall": "npm start",
+    "start": "node node-index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "make-prop-stream": "^1.0.0",
+    "request": "^2.73.0",
+    "speaker": "^0.3.0",
+    "speech-stream": "^1.0.0",
+    "stream-array": "^1.1.2",
+    "wav": "^1.0.0"
+  }
+}
