@@ -12,8 +12,11 @@ $ sudo apt-get install gcc libasound2 libasound2-dev
 $ sudo apt-get install mpg321
 ```
 
-`vi node_modules/speech-stream/node_modules/mespeak/src/index.js` then
+`vi node_modules/speech-stream/node_modules/mespeak/src/index.js` of `vi node_modules/mespeak/src/index.js` then
 replace
-  var ESpeak = require("./ESPEAK.js")
+
+>  var ESpeak = require("./ESPEAK.js")
+
 with
-  var ESpeak = require("./ESpeak.js")
+
+>  var ESpeak = require("./ESpeak.js")
